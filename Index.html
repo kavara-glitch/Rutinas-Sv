@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rutinas-Sv | Asistente Inteligente Ultra</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== VIDEOLLAMADA ===== -->
+<div class="call-overlay" id="callOverlay">
+<div class="call-video-area">
+<div class="campfire-embers" id="campfireEmbers"></div>
+<div class="campfire-flame" id="campfireFlame">🔥</div>
+<video class="call-remote-video" id="callRemoteVideo" autoplay playsinline></video>
+<div class="call-local-video mirrored" id="callLocalVideoWrap">
+<video id="callLocalVideo" autoplay playsinline muted></video>
+</div>
+<div class="call-info-top">
+<div class="call-peer-info">
+<div class="call-peer-avatar" id="callPeerAvatar">U</div>
+<div>
+<div class="call-peer-name" id="callPeerName">Usuario</div>
+<div class="call-peer-status"><span class="rec-dot"></span><span id="callStatusText">Junto a la fogata</span></div>
+</div>
+</div>
+<div class="call-timer" id="callTimer">00:00</div>
+</div>
+<div class="call-status-overlay" id="callStatusOverlay">
+<div class="call-status-avatar" id="callStatusAvatar">U</div>
+<div class="call-status-name" id="callStatusName">Usuario</div>
+<div class="call-status-text campfire" id="callStatusTextBig">🔥 Encendiendo fogata...</div>
+<button class="btn btn-secondary" onclick="cancelCall()" style="width:auto;margin-top:10px">Cancelar</button>
+</div>
+<div class="call-controls">
+<button class="call-ctrl-btn" id="callBtnMic" onclick="toggleCallMic()" title="Silenciar">🎤</button>
+<button class="call-ctrl-btn" id="callBtnCam" onclick="toggleCallCam()" title="Cámara">📹</button>
+<button class="call-ctrl-btn" onclick="toggleCallSpeaker()" title="Altavoz">🔊</button>
+<button class="call-ctrl-btn hangup" onclick="hangupCall()" title="Apagar fogata">🧯</button>
+</div>
+</div>
+</div>
+
+<!-- ===== ENCUENTRO ENTRANTE (antes "llamada entrante") ===== -->
+<div class="call-incoming" id="callIncoming">
+<div class="call-incoming-avatar" id="callIncomingAvatar">U</div>
+<div class="call-incoming-name" id="callIncomingName">Usuario</div>
+<div class="call-incoming-label">🔥 Te está invitando a encender una fogata</div>
+<div class="call-incoming-actions">
+<button class="call-incoming-btn reject" onclick="rejectCall()" title="Rechazar">📵</button>
+<button class="call-incoming-btn accept call-fire-btn" onclick="acceptCall()" title="Encender">🔥</button>
+</div>
+</div>
+
+<!-- ===== AUTH ===== -->
+<div id="authScreen">
+<div class="auth-bg"></div>
+<div class="auth-container">
+<div class="auth-logo">
+<h1> Rutinas<span>-Sv</span></h1>
+<p>Asistente Inteligente Ultra</p>
+<div class="auth-badge">✨ IA + Análisis + Logros + Planes + Chat Global + Rutinas en Órbita + Fogatas + Radar</div>
+</div>
+<div class="auth-card" style="position:relative">
+<div class="auth-tabs">
+<button class="auth-tab active" onclick="switchAuthTab('login')">Iniciar Sesión</button>
+<button class="auth-tab" onclick="switchAuthTab('register')">Crear Cuenta</button>
+</div>
+<div id="authError" class="auth-error"></div>
+<div id="authSuccess" class="auth-success"></div>
+<div id="loginForm">
+<div class="form-group"><label>📧 Correo</label><input type="email" id="loginEmail" placeholder="tu@correo.com"></div>
+<div class="form-group"><label>👤 Usuario</label><input type="text" id="loginUsername" placeholder="tu_usuario"></div>
+<div class="form-group"><label>🔒 Contraseña</label><input type="password" id="loginPassword" placeholder="Tu contraseña"></div>
+<button class="btn btn-primary" onclick="login()">🔑 Entrar</button>
+</div>
+<div id="registerForm" style="display:none;">
+<div class="form-group"><label>📧 Correo</label><input type="email" id="regEmail" placeholder="tu@correo.com"></div>
+<div class="form-group"><label>👤 Usuario</label><input type="text" id="regUsername" placeholder="tu_usuario"></div>
+<div class="form-group"><label>🎂 Fecha de nacimiento</label><input type="date" id="regBirthdate"></div>
+<div class="form-group"><label>🔒 Contraseña</label><input type="password" id="regPassword" placeholder="Mínimo 4 caracteres"></div>
+<div class="form-group"><label>🔒 Confirmar</label><input type="password" id="regPasswordConfirm" placeholder="Repite"></div>
+<div class="form-group"><label>⚧ Género</label><select id="regGender"><option value="hombre">Hombre</option><option value="mujer">Mujer</option><option value="otro">Otro</option></select></div>
+<label style="font-weight:600;margin-bottom:8px;display:block;font-size:0.9em;">Tipo de cuenta</label>
+<div class="role-selector">
+<button type="button" class="role-btn selected" onclick="selectRole('user',this)"><span class="role-icon">👤</span><span class="role-name">Usuario</span></button>
+<button type="button" class="role-btn" onclick="selectRole('admin',this)"><span class="role-icon">🛡️</span><span class="role-name">Admin</span></button>
+<button type="button" class="role-btn" onclick="selectRole('boss',this)"><span class="role-icon">👑</span><span class="role-name">CEO</span></button>
+</div>
+<div class="form-group admin-pass-group" id="regAdminPass" style="display:none">
+<label>🔑 Contraseña secreta</label>
+<input type="password" id="regAdminPassword" placeholder="Ingresa la contraseña">
+</div>
+<div class="terms-check-row">
+<input type="checkbox" id="regAcceptTerms">
+<label for="regAcceptTerms">He leído y acepto el <a href="#" onclick="event.preventDefault();openLegalModal()">Aviso Legal y de Privacidad</a>, y confirmo que la fecha de nacimiento indicada es correcta.</label>
+</div>
+<button class="btn btn-primary" onclick="register()">✨ Crear Cuenta</button>
+</div>
+<div class="auth-footer-links"><a href="#" onclick="event.preventDefault();openLegalModal()">📜 Aviso Legal y de Privacidad</a></div>
+</div>
+</div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="appScreen">
+<button class="darkmode-corner-btn" id="darkModeCornerBtn" onclick="toggleDarkMode()" title="Modo oscuro">🌙</button>
+<header class="app-header">
+<div class="header-left">
+<button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+<div class="app-logo">🌿 Rutinas<span>-Sv</span></div>
+</div>
+<div class="header-center">
+<div class="xp-mini" onclick="navigateTo('achievements')" title="Nivel y XP">
+<span id="xpMiniLevel">1</span>
+<div class="xp-bar-mini"><div class="xp-bar-mini-fill" id="xpMiniBar" style="width:0%"></div></div>
+<span id="xpMiniText">0 XP</span>
+</div>
+</div>
+<div class="header-right">
+<div class="user-menu" style="position:relative">
+<div class="user-avatar" id="headerAvatar" onclick="toggleUserMenu()">U</div>
+<div class="user-dropdown" id="userDropdown">
+<div class="dropdown-item" onclick="navigateTo('profile')">👤 Mi Perfil</div>
+<div class="dropdown-item" onclick="navigateTo('achievements')">🏆 Logros</div>
+<div class="dropdown-item" onclick="navigateTo('settings')">⚙️ Configuración</div>
+<div class="dropdown-item" onclick="navigateTo('relax')">🌙 Modo Relajante</div>
+<div id="adminMenuItem" class="dropdown-item" style="display:none" onclick="navigateTo('admin')">🛡️ Panel Admin/CEO</div>
+<div class="dropdown-divider"></div>
+<div class="dropdown-item danger" onclick="logout()">🚪 Cerrar Sesión</div>
+</div>
+</div>
+</div>
+</header>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+<div class="sidebar-item" onclick="navigateTo('dashboard')" data-page="dashboard"><span class="icon">🏠</span>Inicio</div>
+<div class="sidebar-item" onclick="navigateTo('garden')" data-page="garden"><span class="icon">🌿</span>Jardín de Hábitos</div>
+<div class="sidebar-item" onclick="navigateTo('states')" data-page="states"><span class="icon">📸</span>Estados</div>
+<div class="sidebar-item" onclick="navigateTo('tasks')" data-page="tasks"><span class="icon">📋</span>Mis Tareas<span class="badge-count" id="taskBadge" style="display:none">0</span></div>
+<div class="sidebar-item" onclick="navigateTo('ai')" data-page="ai"><span class="icon">🤖</span>Asistente Sv</div>
+<div class="sidebar-item" onclick="navigateTo('achievements')" data-page="achievements"><span class="icon">🏆</span>Logros</div>
+<div class="sidebar-item" onclick="navigateTo('orbital')" data-page="orbital"><span class="icon">🌌</span>Línea Orbital</div>
+<div class="sidebar-item" onclick="navigateTo('timemanager')" data-page="timemanager"><span class="icon">⏱️</span>Gestor de Tiempo</div>
+<div class="sidebar-section">Rutinas Compartidas</div>
+<div class="sidebar-item" onclick="navigateTo('privatechats')" data-page="privatechats"><span class="icon">🌌</span>Rutinas en Órbita<span class="badge-count" id="dmBadge" style="display:none">0</span></div>
+<div class="sidebar-section">Configuración</div>
+<div class="sidebar-item" onclick="navigateTo('settings')" data-page="settings"><span class="icon">⚙️</span>Ajustes</div>
+<div class="sidebar-item" onclick="navigateTo('relax')" data-page="relax"><span class="icon">🌙</span>Modo Relajante</div>
+<div class="sidebar-item" onclick="navigateTo('profile')" data-page="profile"><span class="icon">👤</span>Perfil</div>
+<div class="sidebar-section" id="sidebarAdminSection" style="display:none">Administración</div>
+<div class="sidebar-item" id="sidebarAdminItem" style="display:none" onclick="navigateTo('admin')" data-page="admin"><span class="icon">🛡️</span>Panel Admin/CEO</div>
+</nav>
+<main class="main-content">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+<div class="greeting-card animate-fade" id="greetingCard">
+<h2 id="greetingText">¡Buen día! 👋</h2>
+<p id="greetingDate"></p>
+<div class="greeting-streak" id="greetingStreak">🔥 <span id="streakCount">0</span> días de racha</div>
+</div>
+<div id="survivalBanner"></div>
+<div class="garden-preview" id="gardenPreviewCard" onclick="navigateTo('garden')">
+<div class="garden-preview-head"><h3>🌿 Jardín de Hábitos</h3><span style="font-size:0.8em;color:var(--text-light)">Ver jardín completo →</span></div>
+<div id="gardenPreviewSvg"></div>
+</div>
+<div class="stats-grid">
+<div class="stat-card animate-slide"><div class="stat-icon">📋</div><div class="stat-value" id="statTotal">0</div><div class="stat-label">Tareas Totales</div></div>
+<div class="stat-card animate-slide" style="animation-delay:0.1s"><div class="stat-icon">✅</div><div class="stat-value" id="statCompleted">0</div><div class="stat-label">Completadas</div></div>
+<div class="stat-card animate-slide" style="animation-delay:0.2s"><div class="stat-icon">⏳</div><div class="stat-value" id="statPending">0</div><div class="stat-label">Pendientes</div></div>
+<div class="stat-card animate-slide" style="animation-delay:0.3s"><div class="stat-icon">🔋</div><div class="stat-value" id="statAiTokens">0/10</div><div class="stat-label">Tokens de IA</div></div>
+</div>
+<div class="quick-actions">
+<div class="quick-action" onclick="navigateTo('tasks')"><div class="qa-icon">➕</div><div class="qa-label">Nueva Tarea</div></div>
+<div class="quick-action" onclick="navigateTo('ai')"><div class="qa-icon">🤖</div><div class="qa-label">Preguntar IA</div></div>
+<div class="quick-action" onclick="navigateTo('privatechats')"><div class="qa-icon">🌌</div><div class="qa-label">Rutinas en Órbita</div></div>
+<div class="quick-action" onclick="navigateTo('garden')"><div class="qa-icon">🌿</div><div class="qa-label">Jardín</div></div>
+<div class="quick-action" onclick="navigateTo('orbital')"><div class="qa-icon">🚀</div><div class="qa-label">Línea Orbital</div></div>
+<div class="quick-action" onclick="navigateTo('timemanager')"><div class="qa-icon">⏱️</div><div class="qa-label">Gestor de Tiempo</div></div>
+<div class="quick-action" onclick="navigateTo('achievements')"><div class="qa-icon">🏆</div><div class="qa-label">Ver Logros</div></div>
+</div>
+<div id="dashboardAiSuggestions"></div>
+<div class="card">
+<div class="card-header"><h3 class="card-title">📅 Hoy</h3></div>
+<div id="dashboardTasks"></div>
+</div>
+</div>
+
+<!-- GARDEN -->
+<div class="page" id="page-garden">
+<h1 class="page-title">🌿 Jardín de Hábitos</h1>
+<p class="page-subtitle">Cada categoría de tarea es una planta viva: tu constancia la hace florecer, el abandono la marchita.</p>
+<div class="card">
+<div class="card-header"><h3 class="card-title">🌱 Tu jardín</h3><span style="font-size:0.85em;color:var(--text-light)" id="gardenSubtitle"></span></div>
+<div id="gardenFullSvg"></div>
+<div class="garden-legend" id="gardenLegend"></div>
+</div>
+<div class="card">
+<div class="card-header"><h3 class="card-title">📈 Actividad de la semana</h3></div>
+<div id="gardenWeekBars"></div>
+</div>
+</div>
+
+<!-- ESTADOS -->
+<div class="page" id="page-states">
+<h1 class="page-title">📸 Estados</h1>
+<p class="page-subtitle">Comparte un momento de tu día — dura 24 horas y luego se desvanece, como tus rachas.</p>
+<div class="card">
+<div class="state-camera-container" id="stateCameraContainer">
+<video id="stateCameraVideo" autoplay playsinline muted></video>
+<canvas id="stateCameraCanvas"></canvas>
+<div class="cam-flash" id="stateCamFlash"></div>
+<div class="state-camera-controls">
+<button class="state-cam-btn switch" onclick="switchStateCamera()" title="Cambiar cámara">🔄</button>
+<button class="state-cam-btn capture" onclick="captureStatePhoto()" title="Capturar foto" id="stateCamCaptureBtn">📸</button>
+<button class="state-cam-btn close" onclick="closeStateCamera()" title="Cerrar cámara">✖</button>
+</div>
+</div>
+<textarea id="stateText" placeholder="¿Cómo va tu día?" rows="2" style="width:100%;padding:12px;border:2px solid #e8e8e8;border-radius:var(--radius-sm);font-family:var(--font);font-size:0.9em;resize:vertical;background:var(--bg);color:var(--text);margin-bottom:10px"></textarea>
+<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:10px">
+<button class="btn btn-secondary btn-sm" onclick="openStateCamera()">📷 Tomar Foto</button>
+<label class="btn btn-secondary btn-sm" style="cursor:pointer">🖼️ Subir Imagen<input type="file" accept="image/*" style="display:none" onchange="handleStateImage(event)"></label>
+</div>
+<div id="stateImagePreview" style="display:none;text-align:center;margin-bottom:10px">
+<img id="stateImagePreviewImg" src="" style="max-width:100%;max-height:200px;border-radius:var(--radius-sm)">
+<button class="btn btn-secondary btn-sm" onclick="clearStateImage()" style="margin-top:6px">🗑️ Quitar imagen</button>
+</div>
+<button class="btn btn-primary" onclick="publishState()" style="width:auto">📤 Publicar Estado</button>
+<div style="font-size:0.78em;color:var(--text-light);margin-top:8px" id="liveStatesStatus">🟡 Conectando estados en vivo…</div>
+</div>
+<div class="card">
+<div class="card-header"><h3 class="card-title">📰 Estados recientes</h3><button class="btn btn-secondary btn-sm" onclick="refreshStates()">🔄 Actualizar</button></div>
+<div class="states-feed" id="statesFeed"></div>
+</div>
+</div>
+
+<!-- TASKS -->
+<div class="page" id="page-tasks">
+<h1 class="page-title">📋 Mis Tareas</h1>
+<p class="page-subtitle">Organiza tu día con inteligencia artificial</p>
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+<h3 class="card-title">➕ Nueva Tarea</h3>
+<button class="ai-schedule-btn" onclick="aiAutoSchedule()">🤖 Auto-Agendar con IA</button>
+</div>
+<div class="task-form">
+<div class="form-group"><label>Título</label><input type="text" id="taskTitle" placeholder="Ej: Ejercicio matutino"></div>
+<div class="form-group"><label>Descripción</label><input type="text" id="taskDesc" placeholder="Opcional"></div>
+<div class="form-group"><label>Fecha</label><input type="date" id="taskDate"></div>
+<div class="form-group"><label>Hora</label><input type="time" id="taskTime"></div>
+<div class="form-group"><label>Clasificación</label><select id="taskCategory"><option value="trabajo">💼 Trabajo</option><option value="personal">🏠 Personal</option><option value="salud">❤️ Salud</option><option value="estudio">📚 Estudio</option><option value="hogar">🏡 Hogar</option><option value="otro">📌 Otro</option></select></div>
+<div class="form-group"><label>Prioridad</label><select id="taskPriority"><option value="baja">🟢 Baja</option><option value="media">🟡 Media</option><option value="alta">🔴 Alta</option></select></div>
+<div class="form-group"><label>Duración</label><select id="taskDuration"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="60">1 hora</option><option value="90">1.5 horas</option><option value="120">2 horas</option></select></div>
+</div>
+<button class="btn btn-primary" onclick="addTask()" style="margin-top:12px">✅ Agregar Tarea</button>
+</div>
+<div class="search-bar"><input type="text" id="taskSearch" placeholder="🔍 Buscar..." oninput="renderTasks()"></div>
+<div class="filter-chips">
+<span class="chip active" onclick="filterTasks('all',this)">Todas</span>
+<span class="chip" onclick="filterTasks('pending',this)">⏳ Pendientes</span>
+<span class="chip" onclick="filterTasks('completed',this)">✅ Completadas</span>
+<span class="chip" onclick="filterTasks('alta',this)">🔴 Alta</span>
+<span class="chip" onclick="filterTasks('trabajo',this)">💼 Trabajo</span>
+<span class="chip" onclick="filterTasks('salud',this)">❤️ Salud</span>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+<button class="btn btn-secondary btn-sm" onclick="deleteOverdueTasks()" style="color:var(--warning);border-color:var(--warning)">🗑️ Eliminar vencidas</button>
+<button class="btn btn-secondary btn-sm" onclick="deleteAllTasks()" style="color:var(--danger);border-color:var(--danger)">🗑️ Eliminar todas</button>
+</div>
+<ul class="task-list" id="taskList"></ul>
+</div>
+
+<!-- AI -->
+<div class="page" id="page-ai">
+<h1 class="page-title">🤖 Asistente Sv</h1>
+<p class="page-subtitle">Tu IA personal con análisis de hábitos</p>
+<div class="ai-token-bar" id="aiTokenBar"></div>
+<div class="card" style="padding:0;overflow:hidden">
+<div class="chat-container">
+<div class="chat-messages" id="chatMessages">
+<div class="chat-message bot"><div class="chat-avatar">🌿</div><div class="chat-bubble">¡Hola! Soy <strong>Asistente Sv</strong> 🌿 Puedo ayudarte con:<br>• 🤖 Sugerir horarios óptimos<br>• 📊 Analizar tus hábitos<br>• 💡 Consejos personalizados<br>• 📝 Generar planes<br>• 💳 Gestionar presupuesto<br>• 🌙 Modos de relajación<br>• Y mucho más... ¿Qué necesitas?<br><br>🔋 Cada tarea que completas te da 1 token de IA (máximo 10). Cada mensaje que me envíes gasta 1 token.</div></div>
+</div>
+<div class="chat-input-container">
+<input type="text" id="chatInput" placeholder="Pregúntame lo que quieras..." onkeypress="if(event.key==='Enter')sendMessage()">
+<button class="chat-send-btn" onclick="sendMessage()">➤</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ACHIEVEMENTS -->
+<div class="page" id="page-achievements">
+<h1 class="page-title">🏆 Logros y Recompensas</h1>
+<p class="page-subtitle">Gana XP y desbloquea logros</p>
+<div class="level-display" id="levelDisplay"></div>
+<div class="card">
+<div class="card-header"><h3 class="card-title">⭐ Logros Showcase (3 visibles)</h3></div>
+<p style="font-size:0.88em;color:var(--text-light);margin-bottom:12px">Elige 3 logros desbloqueados para mostrar junto a tu nombre.</p>
+<div class="showcase-selector" id="showcaseSelector"></div>
+<button class="btn btn-primary btn-sm" onclick="saveShowcase()" style="margin-top:14px;width:auto">💾 Guardar</button>
+</div>
+<div class="card">
+<div class="card-header"><h3 class="card-title">🎖️ Logros</h3><span style="font-size:0.85em;color:var(--text-light)" id="achievementCount">0/0</span></div>
+<div class="achievements-grid" id="achievementsGrid"></div>
+</div>
+</div>
+
+<!-- GESTOR DE TIEMPO -->
+<div class="page" id="page-timemanager">
+<h1 class="page-title">⏱️ Gestor de Tiempo</h1>
+<p class="page-subtitle">Analiza tus patrones reales y te sugiere una mejor forma de organizar tu día</p>
+<div class="card">
+<div class="card-header"><h3 class="card-title">📊 Tus patrones</h3></div>
+<div id="timePatternsSummary"></div>
+</div>
+<div class="card">
+<div class="card-header"><h3 class="card-title">🗓️ Horario sugerido para hoy</h3><button class="btn btn-secondary btn-sm" onclick="renderTimeManager()">🔄 Recalcular</button></div>
+<div id="suggestedSchedule"></div>
+</div>
+<div class="card">
+<div class="card-header"><h3 class="card-title">🤖 Sugerencia personalizada con IA</h3></div>
+<p style="font-size:0.85em;color:var(--text-light);margin-bottom:10px">Usa 1 token de IA para que el Asistente Sv analice tu historial y te proponga una rutina a tu medida.</p>
+<button class="btn btn-primary btn-sm" onclick="requestAiRoutineSuggestion()" id="aiRoutineBtn" style="width:auto">🔋 Pedir sugerencia (1 token)</button>
+<div id="aiRoutineSuggestion" style="margin-top:14px"></div>
+</div>
+</div>
+
+<!-- RELAX MODE -->
+<div class="page" id="page-relax">
+<h1 class="page-title">🌙 Modo Relajante</h1>
+<p class="page-subtitle">Respira, desconecta y recarga energías</p>
+<div class="relax-container">
+<div class="relax-circle" id="relaxCircle" onclick="startBreathingExercise()">
+<svg width="220" height="220" viewBox="0 0 220 220">
+<circle class="ring-bg" cx="110" cy="110" r="100"/>
+<circle class="ring-fill" id="breathRing" cx="110" cy="110" r="100" stroke-dasharray="628" stroke-dashoffset="628"/>
+</svg>
+<div class="relax-circle-label" id="breathPhase">🌬️<br>Toca para<br>empezar</div>
+</div>
+<p class="relax-subtext">Técnica 4-7-8: inhala 4s, mantén 7s, exhala 8s.</p>
+<div class="relax-sounds">
+<button class="relax-sound-btn" onclick="toggleRelaxSound('rain',this)" title="Lluvia">🌧️</button>
+<button class="relax-sound-btn" onclick="toggleRelaxSound('waves',this)" title="Olas">🌊</button>
+<button class="relax-sound-btn" onclick="toggleRelaxSound('forest',this)" title="Bosque">🌲</button>
+<button class="relax-sound-btn" onclick="toggleRelaxSound('fire',this)" title="Fogata">🔥</button>
+<button class="relax-sound-btn" onclick="toggleRelaxSound('birds',this)" title="Pájaros">🐦</button>
+<button class="relax-sound-btn" onclick="toggleRelaxSound('wind',this)" title="Viento">🍃</button>
+</div>
+</div>
+</div>
+
+<!-- ORBITAL TIMELINE -->
+<div class="page" id="page-orbital">
+<div class="orbital-wrapper" id="orbitalWrapper">
+<div class="orbital-header">
+<div class="orbital-title"><span>🌌</span> Línea de Tiempo Orbital</div>
+<div class="orbital-controls">
+<button class="orbital-btn active" id="orbitAutoBtn" onclick="toggleOrbitalAuto()">⟳ Auto</button>
+<button class="orbital-btn" onclick="resetOrbital()">↺ Centrar</button>
+<button class="orbital-btn" onclick="refreshOrbitalData()">🔄 Actualizar</button>
+</div>
+</div>
+<div class="orbital-filter-bar">
+<button class="orbital-filter active" onclick="setOrbitalFilter('all',this)">Todos</button>
+<button class="orbital-filter" onclick="setOrbitalFilter('trabajo',this)">💼 Trabajo</button>
+<button class="orbital-filter" onclick="setOrbitalFilter('salud',this)">❤️ Salud</button>
+<button class="orbital-filter" onclick="setOrbitalFilter('personal',this)">💜 Personal</button>
+<button class="orbital-filter" onclick="setOrbitalFilter('completed',this)">✅ Completadas</button>
+<button class="orbital-filter" onclick="setOrbitalFilter('pending',this)">⏳ Pendientes</button>
+</div>
+<div class="orbital-scene" id="orbitalScene" onclick="handleOrbitalBgClick(event)">
+<div class="orbital-center" id="orbitalCenter">
+<div class="orbital-center-ring2"></div>
+<div class="orbital-center-ring1"></div>
+<div class="orbital-center-core"><span>⚡</span></div>
+</div>
+<div class="orbital-ring" id="orbitalRingDecor" style="width:420px;height:420px;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+</div>
+<div class="orbital-legend">
+<div class="orbital-legend-item"><div class="orbital-legend-dot" style="background:#2a9d8f"></div> Completada</div>
+<div class="orbital-legend-item"><div class="orbital-legend-dot" style="background:#4361ee"></div> En progreso</div>
+<div class="orbital-legend-item"><div class="orbital-legend-dot" style="background:rgba(255,255,255,0.25)"></div> Pendiente</div>
+</div>
+</div>
+</div>
+
+<!-- RUTINAS EN ÓRBITA (antes "Chats Privados") -->
+<div class="page" id="page-privatechats">
+<h1 class="page-title">🌌 Rutinas en Órbita</h1>
+<p class="page-subtitle">Cada conversación vive dentro de una rutina o tarea compartida — nada de chats sueltos</p>
+<div class="rc-hub">
+<div class="rc-topbar">
+<div class="rc-topbar-tabs">
+<span class="rc-tab active" id="rcTabActive" onclick="switchRoutineChatTab('active')">🪐 Activas</span>
+<span class="rc-tab" id="rcTabArchive" onclick="switchRoutineChatTab('archive')">🌾 Cosechadas</span>
+</div>
+<button class="rc-new-btn" onclick="openNewRoutineChatModal()">➕ Vincular chat a una rutina</button>
+</div>
+<div id="rcActiveView">
+<div class="rc-orbital-shell orbital-wrapper" id="rcOrbitalShell">
+<div class="orbital-header">
+<div class="orbital-title"><span>🌌</span> Chats orbitando tus rutinas</div>
+<div class="orbital-controls">
+<button class="orbital-btn active" id="rcOrbitAutoBtn" onclick="RoutineChatOrbital.toggle()">⟳ Auto</button>
+<button class="orbital-btn" onclick="RoutineChatOrbital.reset()">↺ Centrar</button>
+</div>
+</div>
+<div class="orbital-scene" id="rcOrbitalScene" onclick="handleRoutineOrbitalBgClick(event)">
+<div class="orbital-center" id="rcOrbitalCenter">
+<div class="orbital-center-ring2"></div>
+<div class="orbital-center-ring1"></div>
+<div class="orbital-center-core"><span>🌱</span></div>
+</div>
+<div class="orbital-ring" style="width:380px;height:380px;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+</div>
+<div class="rc-orbital-empty" id="rcOrbitalEmpty" style="display:none">
+<div class="icon">🌱</div>
+<h3>Aún no tienes rutinas compartidas</h3>
+<p style="margin-top:6px;font-size:0.85em">Pulsa "➕ Vincular chat a una rutina" para empezar a coordinar con alguien</p>
+</div>
+</div>
+</div>
+<div id="rcArchiveView" style="display:none">
+<div class="rc-archive-list" id="rcArchiveList"></div>
+</div>
+</div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+<h1 class="page-title">⚙️ Configuración</h1>
+<p class="page-subtitle">Personaliza tu experiencia</p>
+<div class="card">
+<div class="settings-section"><h3 style="font-size:1.1em;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px">🎨 Tema</h3><div class="theme-grid" id="themeGrid"></div></div>
+<div class="settings-section">
+<div class="notification-toggle"><div><strong>🌙 Modo Oscuro</strong><p style="font-size:0.82em;color:var(--text-light)">Usa el botón 🌙 fijo en la esquina</p></div></div>
+</div>
+<div class="color-customization">
+<h3>🎨 Personalización de Colores</h3>
+<div class="color-grid">
+<div class="color-picker-group"><label>🎨 Principal</label><div class="color-picker-wrapper"><input type="color" id="colorPrimary" value="#2d6a4f"><span class="color-value" id="colorPrimaryValue">#2d6a4f</span></div></div>
+<div class="color-picker-group"><label>💡 Secundario</label><div class="color-picker-wrapper"><input type="color" id="colorPrimaryLight" value="#52b788"><span class="color-value" id="colorPrimaryLightValue">#52b788</span></div></div>
+<div class="color-picker-group"><label>📝 Texto</label><div class="color-picker-wrapper"><input type="color" id="colorText" value="#1a1a2e"><span class="color-value" id="colorTextValue">#1a1a2e</span></div></div>
+<div class="color-picker-group"><label>🖼️ Fondo</label><div class="color-picker-wrapper"><input type="color" id="colorBg" value="#f0f7f4"><span class="color-value" id="colorBgValue">#f0f7f4</span></div></div>
+</div>
+<button class="apply-colors-btn" onclick="applyCustomColors()">💾 Aplicar</button>
+<button class="reset-colors-btn" onclick="resetCustomColors()">🔄 Restaurar</button>
+</div>
+</div>
+<div class="card">
+<div class="settings-section">
+<h3 style="font-size:1.1em;font-weight:700;margin-bottom:14px">🔔 Notificaciones</h3>
+<div class="notification-toggle"><div><strong>Notificaciones Push</strong></div><div class="toggle-switch" id="togglePush" onclick="togglePushNotif()"></div></div>
+<div class="notification-toggle"><div><strong>Notificaciones de Sonido</strong></div><div class="toggle-switch" id="toggleSound" onclick="toggleSoundNotif()"></div></div>
+<div class="notification-toggle"><div><strong>Alertas de Cartera</strong></div><div class="toggle-switch active" id="toggleWalletAlert" onclick="toggleWalletAlert()"></div></div>
+<div class="notification-toggle"><div><strong>Sugerencias IA</strong></div><div class="toggle-switch active" id="toggleAiSuggestions" onclick="toggleAiSuggestions()"></div></div>
+<div style="margin-top:14px"><button class="sound-test-btn" onclick="testSound()">🔊 Probar Sonido</button></div>
+</div>
+</div>
+<div class="card">
+<div class="settings-section">
+<h3 style="font-size:1.1em;font-weight:700;margin-bottom:10px">🤖 Motor de IA (Asistente Sv)</h3>
+<p style="font-size:0.85em;color:var(--text-light);margin-bottom:10px">Cada tarea completada te da 1 token de IA (máximo 10) y cada mensaje al Asistente Sv gasta 1 token. Puedes conectar tu propia API key de Google Gemini para que el asistente entienda mejor tus preguntas; si no configuras una, se usa el motor por defecto.</p>
+<div class="ai-provider-row">
+<div class="form-group" style="margin-bottom:0"><label>Proveedor de IA</label>
+<select id="aiProviderSelect" onchange="document.getElementById('geminiKeyGroup').style.display=this.value==='gemini'?'block':'none'">
+<option value="auto">Automático (por defecto)</option>
+<option value="gemini">Google Gemini</option>
+</select>
+</div>
+<div class="form-group" id="geminiKeyGroup" style="margin-bottom:0;display:none">
+<label>🔑 API Key de Gemini</label>
+<input type="password" id="geminiApiKeyInput" placeholder="Pega aquí tu API key de Google AI Studio">
+<p style="font-size:0.72em;color:var(--text-light);margin-top:4px">Se guarda solo en este navegador. Consíguela gratis en aistudio.google.com/apikey</p>
+</div>
+</div>
+<button class="btn btn-primary btn-sm" onclick="saveAiProviderSettings()" style="width:auto">💾 Guardar Motor de IA</button>
+</div>
+</div>
+<div class="card">
+<div class="settings-section">
+<h3 style="font-size:1.1em;font-weight:700;margin-bottom:10px">🔒 Privacidad y Seguridad</h3>
+<p style="font-size:0.85em;color:var(--text-light);margin-bottom:10px">Tus datos se guardan solo en este navegador. Las contraseñas se protegen con hash SHA-256 + sal, nunca en texto plano.</p>
+<div id="settingsAgeBadge" style="font-size:0.85em;margin-bottom:10px"></div>
+<button class="btn btn-secondary btn-sm" onclick="openLegalModal()" style="width:auto">📜 Ver Aviso Legal y de Privacidad</button>
+</div>
+</div>
+</div>
+
+<!-- ADMIN -->
+<div class="page" id="page-admin">
+<h1 class="page-title" id="adminTitle">🛡️ Panel Admin</h1>
+<p class="page-subtitle">Visión general de todos los usuarios de Rutinas-SV</p>
+<div class="admin-stats" id="adminStats"></div>
+<div class="card">
+<div class="card-header"><h3 class="card-title">👥 Usuarios registrados</h3></div>
+<div style="overflow-x:auto">
+<table class="admin-table" style="width:100%;border-collapse:collapse">
+<thead><tr style="text-align:left;border-bottom:2px solid var(--glass-border)"><th style="padding:8px">Usuario</th><th style="padding:8px">Correo</th><th style="padding:8px">Rol</th><th style="padding:8px">Creado</th><th style="padding:8px">Tareas</th><th style="padding:8px">Acción</th></tr></thead>
+<tbody id="userTableBody"></tbody>
+</table>
+</div>
+</div>
+<div class="card">
+<div class="card-header"><h3 class="card-title">⚠️ Zona de riesgo</h3></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button class="btn btn-secondary btn-sm" onclick="exportFullDB()">📤 Exportar datos</button>
+<label class="btn btn-secondary btn-sm" style="cursor:pointer">📥 Importar datos<input type="file" accept=".json" style="display:none" onchange="importDB(event)"></label>
+<button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Borrar todos los datos</button>
+</div>
+</div>
+</div>
+
+<!-- PROFILE -->
+<div class="page" id="page-profile">
+<h1 class="page-title">👤 Mi Perfil</h1>
+<p class="page-subtitle">Tu información personal</p>
+<div class="profile-header">
+<div class="profile-avatar" id="profileAvatar">U</div>
+<div class="profile-info">
+<h2 id="profileName">Usuario</h2>
+<p id="profileEmail">correo@ejemplo.com</p>
+<span class="profile-role" id="profileRole">Usuario</span>
+<span class="chip" id="profileGender" style="margin-left:6px"></span>
+<div class="user-showcase" id="profileShowcase"></div>
+</div>
+</div>
+<div class="card">
+<h3 class="card-title" style="margin-bottom:14px">✏️ Editar</h3>
+<div class="form-group"><label>Usuario</label><input type="text" id="editUsername"></div>
+<div class="form-group"><label>Correo</label><input type="email" id="editEmail"></div>
+<div class="form-group"><label>Nueva contraseña</label><input type="password" id="editPassword" placeholder="Nueva contraseña"></div>
+<button class="btn btn-primary" onclick="updateProfile()">💾 Guardar</button>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="editTaskModal"><div class="modal">
+<h3>✏️ Editar Tarea</h3><input type="hidden" id="editTaskId">
+<div class="form-group"><label>Título</label><input type="text" id="editTaskTitle"></div>
+<div class="form-group"><label>Descripción</label><input type="text" id="editTaskDesc"></div>
+<div class="form-group"><label>Fecha</label><input type="date" id="editTaskDate"></div>
+<div class="form-group"><label>Hora</label><input type="time" id="editTaskTime"></div>
+<div class="form-group"><label>Clasificación</label><select id="editTaskCategory"><option value="trabajo">💼 Trabajo</option><option value="personal">🏠 Personal</option><option value="salud">❤️ Salud</option><option value="estudio">📚 Estudio</option><option value="hogar">🏡 Hogar</option><option value="otro">📌 Otro</option></select></div>
+<div class="form-group"><label>Prioridad</label><select id="editTaskPriority"><option value="baja">🟢 Baja</option><option value="media">🟡 Media</option><option value="alta">🔴 Alta</option></select></div>
+<div class="modal-actions"><button class="btn btn-secondary btn-sm" onclick="closeModal('editTaskModal')">Cancelar</button><button class="btn btn-primary btn-sm" onclick="saveTaskEdit()">💾 Guardar</button></div>
+</div></div>
+
+<div class="modal-overlay" id="imageModal" onclick="closeModal('imageModal')"><div class="modal image-modal"><h3>🧾 Ticket</h3><img id="imageModalImg" src="" alt="Ticket"><div class="modal-actions"><button class="btn btn-secondary btn-sm" onclick="closeModal('imageModal')">Cerrar</button></div></div></div>
+
+<div class="modal-overlay" id="legalModal"><div class="modal" style="max-width:560px">
+<h3>📜 Aviso Legal, Privacidad y Restricción de Edad</h3>
+<div class="legal-modal-body">
+<p><strong>Edad mínima.</strong> Rutinas-SV es una app de práctica/demostración. Debes tener <strong>al menos 13 años</strong> para crear una cuenta. Si tienes entre 13 y 17 años, se recomienda el acompañamiento de un padre, madre o tutor.</p>
+<p><strong>Cómo se guardan tus datos.</strong> Esta aplicación es un prototipo educativo: todos los datos (tareas, mensajes, contraseñas) se guardan <strong>únicamente en el navegador</strong> (localStorage), no en un servidor. Las contraseñas se almacenan como huella digital (hash SHA-256 con sal), nunca en texto plano.</p>
+<p><strong>Limitaciones de seguridad.</strong> Al no existir un backend real, cualquier persona con acceso físico al dispositivo o a las herramientas de desarrollador del navegador podría ver la información guardada. No introduzcas contraseñas reales que uses en otros servicios, ni información sensible.</p>
+<p><strong>Chats y llamadas.</strong> Los mensajes, pulsos y llamadas ("fogatas") son funciones de demostración en tiempo real y no están moderadas. No compartas datos personales sensibles con otros usuarios de la app.</p>
+<p><strong>Uso responsable.</strong> Al crear una cuenta confirmas que la información proporcionada (incluida tu fecha de nacimiento) es verídica y que aceptas usar la app de forma responsable.</p>
+</div>
+<div class="modal-actions"><button class="btn btn-secondary btn-sm" onclick="closeModal('legalModal')">Cerrar</button></div>
+</div></div>
+
+<div class="modal-overlay" id="newDmModal"><div class="modal">
+<h3>🌱 Vincular chat a una rutina</h3>
+<p style="font-size:0.88em;color:var(--text-light);margin-bottom:10px">Elige una de tus tareas/rutinas y con quién quieres coordinarla. El chat vivirá dentro de esa rutina.</p>
+<div class="rc-new-modal-body">
+<div>
+<div class="rc-field-label" style="margin-bottom:8px">1. Rutina o tarea</div>
+<div class="rc-pick-list" id="rcTaskPickList"></div>
+</div>
+<div>
+<div class="rc-field-label" style="margin-bottom:8px">2. Compartir con</div>
+<div class="rc-pick-list" id="rcUserPickList"></div>
+</div>
+</div>
+<div class="modal-actions"><button class="btn btn-secondary btn-sm" onclick="closeModal('newDmModal')">Cancelar</button><button class="btn btn-primary btn-sm" onclick="confirmNewRoutineChat()">🌱 Sembrar chat</button></div>
+</div></div>
+
+<!-- CÁPSULA FLOTANTE DE CHAT DE RUTINA -->
+<div class="chat-capsule" id="chatCapsule">
+<div class="chat-capsule-header">
+<div class="chat-capsule-actions">
+<button class="chat-capsule-action-btn" onclick="startRoutineCall('voice')" title="Encender fogata (llamada)">🔥</button>
+<button class="chat-capsule-action-btn" onclick="startRoutineCall('video')" title="Fogata con video">🎥</button>
+<button class="chat-capsule-action-btn" onclick="closeRoutineCapsule()" title="Minimizar">✖</button>
+</div>
+<div class="chat-capsule-routine">📌 <span id="capsuleTaskLabel">Rutina</span></div>
+<div class="chat-capsule-title" id="capsuleTaskTitle">Ejercicio matutino</div>
+<div class="chat-capsule-peer">
+<div class="chat-capsule-peer-name">👤 <span id="capsulePeerName">Usuario</span></div>
+<span class="energy-pill media" id="capsulePeerEnergy">⚡ Media</span>
+</div>
+</div>
+<div class="chat-capsule-body" id="capsuleBody">
+<div class="harvest-toast" id="capsuleHarvestToast" style="display:none"><div class="h-icon">🌾</div><div class="h-text">Rutina completada — hilo cosechado</div></div>
+</div>
+<div id="capsuleGrowingIndicator" class="growing-indicator" style="display:none;padding-left:16px"><span class="sprout-icon">🌱</span> <span id="capsuleGrowingText">creciendo...</span></div>
+<div class="chat-capsule-input">
+<div class="chat-capsule-reactions" id="capsuleReactions"></div>
+<div style="position:relative">
+<div class="pulse-popover" id="pulsePopover"></div>
+<div class="chat-capsule-input-row">
+<button class="chat-capsule-btn pulse-btn" onclick="togglePulsePopover()" title="Pulso rápido">💓</button>
+<input type="text" id="capsuleInput" placeholder="Escribe o manda un pulso..." oninput="handleCapsuleTyping()" onkeypress="if(event.key==='Enter')sendRoutineMessage()">
+<button class="chat-capsule-btn" onclick="sendRoutineMessage()">➤</button>
+</div>
+</div>
+</div>
+</div>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js';"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
